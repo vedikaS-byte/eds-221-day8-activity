@@ -1,0 +1,39 @@
+---
+title: "ggplot_practice"
+output: html_document
+---
+
+# ggplot2 practice
+Here, we will explore different ways to make graphs in R using ggplot. 
+
+# Task 1: Do your data viz worst
+Use the "space_launches.csv" to make the worst graph ever using these: 
+
+- fonts
+- background images
+- coord_*
+- panel / plot / geom / text colors
+- point / line patterns and shapes
+- gridline updates
+- tickmark frequency
+- angles
+```{r}
+library(tidyverse)
+# install.packages("ggpubr")
+#install.packages("jpeg")
+library(ggpubr)
+library(jpeg)
+
+img <- readJPEG(here::here("figs", "orca.jpeg"))
+space <- read_csv(here::here("data", "space_launches.csv"))
+
+str(space)                  
+space <- space %>% select(type, launch_year, mission)  
+
+space %>% group_by(type, launch_year) %>% mutate(num_rockets_type = n()) %>%  ggplot(aes(x = launch_year, y = num_rockets_type, label = rownames(space))) + background_image(img) + geom_boxplot(size = 10, fill = "black", col = "white") + geom_point(aes(col = factor(type)),size = 5, shape = "triangle") +  
+   guides(col = "none") + theme_minimal()  + geom_text(family = "Times New Roman", size = 1.5, color = "black") 
+
+#??GeomText
+                  
+```
+
