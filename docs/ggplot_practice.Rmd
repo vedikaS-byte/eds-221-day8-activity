@@ -23,17 +23,127 @@ library(tidyverse)
 #install.packages("jpeg")
 library(ggpubr)
 library(jpeg)
+library(grid)    # for rasterGrob
+library(jpeg)    # for reading JPEGs
+
+orca_grob <- rasterGrob(img, interpolate = TRUE)
 
 img <- readJPEG(here::here("figs", "orca.jpeg"))
 space <- read_csv(here::here("data", "space_launches.csv"))
 
+
+
 str(space)                  
 space <- space %>% select(type, launch_year, mission)  
 
-space %>% group_by(type, launch_year) %>% mutate(num_rockets_type = n()) %>%  ggplot(aes(x = launch_year, y = num_rockets_type, label = rownames(space))) + background_image(img) + geom_boxplot(size = 10, fill = "black", col = "white") + geom_point(aes(col = factor(type)),size = 5, shape = "triangle") +  
-   guides(col = "none") + theme_minimal()  + geom_text(family = "Times New Roman", size = 1.5, color = "black") 
+space_graph <- space %>% 
+  group_by(type, launch_year) %>%
+  mutate(num_rockets_type = n()) %>%
+  ggplot(aes(x = launch_year, 
+             y = num_rockets_type
+            )) +
+  background_image(img) +
+  geom_boxplot(aes(col = factor(type)), 
+        fill = NA) +
+  geom_jitter(aes(col = factor(type)), 
+              size = 2, shape = 10) +
+  guides(col = "none") +
+  # geom_text(family = "Comic Sans MS", 
+  #           size = 3, color = "hotpink") +
+  
+  labs(title = "NASA PLS HIRE ME",
+       subtitle = "this is unhinged",
+       x = "launch year", 
+       y = "number of rockets (srsly this looks so expensive)") +
+  
+  theme_minimal() +  
+  theme(
+    text = element_text(family = "Papyrus", face = "bold"),
+    plot.title = element_text(size = 24, color = "red", family = "Comic Sans MS"),
+    plot.subtitle = element_text(size = 16, color = "purple", family = "Arial"),
+    axis.title = element_text(size = 14, color = "blue", family = "Chalkduster"),
+    axis.text = element_text(size = 12, color = "darkgreen", family = "Times New Roman")
+  )
+
+ggsave(
+  filename = here::here("figs", "space_graph.png"), 
+  plot = space_graph
+)
+
+space %>% 
+  group_by(type, launch_year) %>%
+  mutate(num_rockets_type = n()) %>%
+  ggplot(aes(x = launch_year, 
+             y = num_rockets_type)) + guides(fill = "none", col = "none") + 
+ # background_image(img) +
+  geom_boxplot(size = 10, fill = "black", col = "white", alpha = 0.8) +
+  geom_point(aes(col = factor(type)), size = 10, shape = 8) +   
+  geom_point(aes(col = factor(type)), size = 6, shape = 6) +
+  geom_point(aes(col = factor(type)), size = 4, shape = 3) +   
+  geom_point(aes(col = factor(type)), size = 8, shape = 2, fill = "yellow") + 
+  coord_polar() +  
+  scale_color_hue(l = 30, c = 200) +
+  theme_dark() +
+
+  labs(title = "NASA PLS HIRE ME",
+       subtitle = "this is unhinged",
+       x = "launch year", y = "number of rockets (srsly this looks like sm money was spent)") 
+    
+
+
+
+
+
 
 #??GeomText
                   
 ```
+# Task 3: Do the best data viz for a GHG inventory
+Now, use the appropriate ggplot2 functions to best visualize San Franscisco's GHG inventory.
+
+```{r}
+ghg_emissions <- read_csv(here::here("data", "San_Francisco_Communitywide_Greenhouse_Gas_Inventory.csv"))
+
+
+str(ghg_emissions)
+
+# Create a summary table of total annual greenhouse gas emissions (only from Emissions_mtCO2e column) by sector_general
+ghg_summary <- ghg_emissions %>%  group_by(Sector_General) %>% 
+                       summarise(ghg_emissions_total = sum(Emissions_mtCO2e, na.rm = T))
+
+print(ghg_summary)
+
+# Create a summary table of total annual greenhouse gas emissions (only from Emissions_mtCO2e column) by year and commodity type
+ghg_emissions %>%  group_by(Calendar_Year, Commodity_Type) %>% 
+                       summarise(ghg_emissions_total = sum(Emissions_mtCO2e, na.rm = T))
+
+# Create a subset of the data that only contains observations from 2005 on, only for observations where Sector_Detail2 contains the pattern “PG&E”, then limit to columns Calendar_Year, Sector_Detail2 and Emissions_mtCO2e.
+levels(factor(ghg_emissions$Sector_Detail2))
+ghg_emissions_subset <- ghg_emissions %>% filter(Calendar_Year >= "2005", str_detect(Sector_Detail2, pattern = "PG&E")) %>% select(Calendar_Year, Sector_Detail2, Emissions_mtCO2e) 
+
+print(ghg_emissions_subset)
+
+# Create a finalized graph (as perfect as you can make it) using the San Francisco GHG emissions dataset. You get to choose what you want to visualize. You can pick which variables & observations you’re interested in. You may want to do some wrangling / summarizing first.
+str(ghg_emissions)
+levels(factor(ghg_emissions$Calendar_Year))
+# we could look at average emissions overtime based on general sector. This could help visualize which one is most emissions intensive. We could also do two graphs in one pane to explore whether commodity_type matters as well
+#install.packages("forcats")
+library(forcats)
+?desc()
+ghg_emissions %>% select(Calendar_Year, Sector_General, Commodity_Type, Emissions_mtCO2e) %>% group_by(Calendar_Year, Sector_General) %>% summarise(mean_ghg = mean(Emissions_mtCO2e, na.rm = T), .groups = "drop")  %>%  
+  ggplot(aes(x =factor(Calendar_Year), y = mean_ghg, fill = fct_reorder2(mean_ghg, factor(Calendar_Year)))) + 
+  geom_col(aes(fill = Sector_General), position = "dodge") + 
+  theme_bw() 
+?fct_reorder
+
+  # trend overtime
+# Once you’re done, drop your best graph (as a .png or .jpg) into the course Slack channel.
+
+# could also do projected emissions with regression lines
+
+
+
+```
+
+
 
