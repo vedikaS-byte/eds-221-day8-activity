@@ -172,24 +172,68 @@ library(patchwork)
 ?relevel()
 ?fct_relevel()
 
-graph1<- ghg_emissions %>% group_by(Sector_General) %>% summarize(mean_ghg = mean(Emissions_mtCO2e, na.rm = T)) %>% ggplot() + 
-  geom_col(aes(y = reorder(Sector_General, -mean_ghg), x = mean_ghg, fill = factor(Sector_General)))  + theme_minimal(base_size = 9)  + guides(fill = "none")  + 
-   scale_x_continuous(limits = c(0,400000), labels = scales::label_comma()) + labs(y = "General Sector", x = "Average GHG Emissions (mtCO2e)", title = "Average Greenhouse Gas Emissions Overtime By Generalized Sector")
+graph1<- ghg_emissions %>% group_by(Sector_General) %>% summarize(mean_ghg = mean(Emissions_mtCO2e, na.rm = T)) %>% ggplot(aes(x = mean_ghg, y = reorder(Sector_General, -mean_ghg))) + 
+  geom_text(aes(label = trunc(mean_ghg)), position = "dodge", hjust = -.1, size = 4 ) + 
+  geom_col( aes(fill = factor(Sector_General)))  + 
+  theme_minimal(base_size = 9)  + 
+  guides(fill = "none")  +
+   scale_x_continuous(limits = c(0,400000), labels = scales::label_comma()) + 
+  labs(y = "General Sector", x = "Average GHG Emissions (mtCO2e)", title = "Average Greenhouse Gas Emissions Overtime By Generalized Sector") + 
+  scale_fill_brewer(palette = "Dark2")  + 
+  theme(plot.title = element_text(size = 20,  family = "Times New Roman", hjust = .5), axis.text.x = element_text(size = 8), axis.title.y = element_text(size =12, family = "Times New Roman"), axis.title.x  = element_text(size =12, family = "Times New Roman")) 
+ 
+graph1
+
+#+ theme(axis.text.title   =  element_text(size = 20, family = "Times New Roman"))
 #+ scale_y_continuous() 
 
+
 graph2 <- ghg_emissions_graph %>% ggplot(aes(y = fct_relevel( factor(Calendar_Year), rev), x = mean_ghg)) + 
+  geom_text(aes(label = trunc(mean_ghg)), position = "dodge", hjust = -.1, size = 2) + 
   geom_col(aes(fill = factor(Sector_General)), position = "dodge")+   #scale_y_log10() 
- xlim(0,480410) +
-  scale_x_continuous(labels = scales::label_comma()) + 
+ 
+  scale_x_continuous(limits = c(0,500000), labels = scales::label_comma()) + 
   scale_y_discrete(breaks = c("1990","2000", "2005", "2010", "2012", "2015", "2016", "2017", "2018", "2019"))+ 
-  theme_bw(base_size = 11) + labs(y = "Year", x = "Average GHG Emissions (mtCO2e)") + facet_wrap(~Sector_General) + guides(fill = "none") + theme(axis.text.x = element_text(angle = 20, size = 7), axis.text.y = element_text(angle = 20, size = 7))
-# 
-# 
+  theme_bw(base_size = 11) + 
+  labs(y = "Year", x = "Average GHG Emissions (mtCO2e)") +
+  facet_wrap(~Sector_General) + 
+  guides(fill = "none") + 
+  theme(axis.text.x = element_text(angle = 20, size = 7, family = "Times New Roman"), axis.text.y = element_text(angle = 20, size = 7, family = "Times New Roman")) + 
+  # scale_fill_manual(values = c("444722", "2D4722", "20891A", "224547", "472322, 222947", "472422")) +
+  scale_fill_brewer(palette = "Dark2")
+
+graph2
+
+graph3 <- ghg_emissions_graph %>% ggplot(aes(x = factor(Calendar_Year), y = mean_ghg)) + 
+  geom_text(aes(label = trunc(mean_ghg)), position = "dodge", vjust = -.5, size = 2) + 
+  geom_col(aes(fill = factor(Sector_General)), position = "dodge")+   #scale_y_log10() 
+ 
+  scale_y_continuous(limits = c(0,500000), labels = scales::label_comma()) + 
+  scale_x_discrete(breaks = c("1990","2000", "2005", "2010", "2012", "2015", "2016", "2017", "2018", "2019"))+ 
+  theme_bw() + 
+  labs(x = "Year", y = "Average GHG Emissions (mtCO2e)") +
+  facet_wrap(~Sector_General) + 
+  guides(fill = "none") + 
+  theme(axis.text.x = element_text(angle = 20, size = 7, family = "Times New Roman"), axis.text.y = element_text(angle = 20, size = 7), axis.title.y = element_text(family = "Times New Roman"), axis.title.x = element_text(family = "Times New Roman")) + 
+  # scale_fill_manual(values = c("444722", "2D4722", "20891A", "224547", "472322, 222947", "472422")) +
+  scale_fill_brewer(palette = "Dark2")
+
+graph3
+
+
+
+
 # graph1 / graph2
 # library(cowplot)
-plot_grid(graph1, graph2, nrow = 2)
-?plot_grid()
+plot_grid(graph1, graph3, nrow = 2)
+
+ggsave(plot = plot_grid(graph1, graph2, nrow = 2), here::here("figs", "ghg_graph.png"))
+
 levels(factor(ghg_emissions$Calendar_Year))
+
+
+
+
 ```
 
 
